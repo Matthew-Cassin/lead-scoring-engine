@@ -1,0 +1,11 @@
+raw_lead,source
+"John Doe from Acme Corp, john.doe@acme.com, (212) 555-0123, looking for marketing automation software before Q3",form_submission
+"J. Doe, Acme Corporation -- reached out again asking about pricing for the automation tool, same email john.doe@acme.com",follow_up_email
+"Jane Smith, jane@techstartup.io, CEO of TechCo, very interested in our lead gen platform, wants a demo this week",form_submission
+"Contact: Mike Johnson, mike_j@dataco.org, (415) 555-0166, 2026 budget already approved for new CRM software, urgent",webinar_signup
+"Hi, this is Mike from DataCo, same number (415) 555-0166, following up on the CRM conversation from the trade show",trade_show
+"someone stopped by the booth, left a card that just says 'not-an-email' and no phone, seemed mildly interested",trade_show
+"Sarah Chen, VP of Engineering at CloudNine Inc, sarah.chen@cloudnine.dev, (628) 555-0142, need a solution deployed by end of quarter, budget approved, very urgent",form_submission
+"Tom, tom@smallshop.biz, small retail shop owner, just browsing, submitted the contact form but no message",website_form
+"Priya Patel, priya.patel@fingroup.com, +1-212-555-0177, Finance industry, evaluating three vendors for compliance software, wants pricing",form_submission
+"no name given, phone only: 555-0199 (didn't catch the area code), said they'd call back, mentioned they work in manufacturing",cold_call_log
