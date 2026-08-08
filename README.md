@@ -47,7 +47,56 @@ cp .env.example .env
 lead-scoring-engine --input sample_leads.csv --output results
 ```
 
-<!-- REAL_OUTPUT_PLACEHOLDER -->
+```
+Extracting fields...
+  [##############################] 10/10
+
+Scoring leads...
+  [##############################] 8/8
+
+✓ Loaded 10 lead(s) from sample_leads.csv
+✓ Extracted fields (10/10 successful)
+✓ Validated emails (7/10 valid)
+✓ Deduplicated (2 duplicate(s) removed)
+✓ Scored leads (avg: 52.5)
+
+Results saved to:
+  - results/leads_scored.csv
+  - results/leads_scored.json
+  - results/summary_report.txt
+  - results/email_digest.html
+
+Total API cost: $0.0448
+```
+
+That's a real run against `sample_leads.csv` (10 hand-written messy leads, `claude-sonnet-5`, 18 total API calls: 10 extractions + 8 scores, 2 leads merged away before scoring) -- not a mocked example. A rerun over the same file costs `$0.0000` and reports `18 cache hit(s)`.
+
+`summary_report.txt` from that same run:
+
+```
+=== LEAD PROCESSING SUMMARY ===
+Total Leads Processed: 10
+Successful Extractions: 10 (100%)
+Valid Email Addresses: 7 (70%)
+Duplicates Found & Removed: 2
+Average Lead Score: 52.5
+High-Value Leads (flagged high_value): 4 (50%)
+Cache Hits: 0
+Total API Cost: $0.0448
+Processing Time: 1m 30s
+
+TOP LEADS (by score):
+1. Amara Okafor (Northlight Cloud) - Score 88 -- Immediate outreach within 24 hours emphasizing quick implementation timeline and quarter-end deployment capability. Offer a fast-track onboarding call this week, provide case studies of similar cloud companies with rapid deployments, and propose a streamlined contract process to match their urgency.
+2. Renata Silva (Brightwave Analytics) - Score 80 -- Immediately schedule the requested demo within 24-48 hours, and use the initial call to qualify company size, decision-making authority, and specific pain points to tailor a fast-tracked proposal.
+3. Daniel Reyes (Meridian Logistics Inc) - Score 78 -- Send a tailored pricing breakdown with ROI calculator specific to logistics automation, and propose a short call within 48 hours to address any remaining objections before offering a limited-time incentive to close within 30 days.
+4. Priya Patel (Summit Finance Group) - Score 68 -- Send a tailored ROI/compliance case study within 24 hours, request a discovery call to understand evaluation criteria and timeline, and differentiate from competitors by highlighting unique compliance features and implementation speed.
+5. Carlos Mendoza (Palmetto Data Co) - Score 58 -- Send a personalized email referencing the trade show discussion, share a relevant CRM case study or demo offer, and ask qualifying questions about company size, current tools, and timeline to gauge urgency.
+```
+
+Two things worth calling out about that real run:
+
+- **The two duplicate pairs in `sample_leads.csv` were deliberately built to test different matching signals** -- "Daniel Reyes" appears twice with the same email but no repeated phone, "Carlos Mendoza" appears twice with the same phone but no repeated email on the second mention. `contact-deduplicator` correctly merged both pairs, one via each signal, entirely through this project's integration layer.
+- **Claude did not hallucinate a field it wasn't given.** The second "Carlos" lead only restates his phone number ("same number..."), not his email -- and the real extraction correctly returned `email: null` for that record rather than assuming it matched the first mention. (Deduplication still merged the two records via the phone number they *did* share.)
 
 ### Python
 
