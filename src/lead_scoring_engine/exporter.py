@@ -6,13 +6,12 @@ import html
 import json
 from dataclasses import asdict
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 
 from .models import Lead, ProcessingStats
 
-__all__ = ["export_csv", "export_json", "generate_summary_report", "generate_email_digest"]
+__all__ = ["export_csv", "export_json", "generate_email_digest", "generate_summary_report"]
 
 _CSV_COLUMNS = [
     "id",
@@ -31,7 +30,7 @@ _CSV_COLUMNS = [
 ]
 
 
-def export_csv(leads: List[Lead], filename: str) -> None:
+def export_csv(leads: list[Lead], filename: str) -> None:
     """Write ``leads`` to a CSV file, creating parent directories as needed.
 
     Columns: ``id, name, email, email_valid, phone, phone_valid,
@@ -46,7 +45,7 @@ def export_csv(leads: List[Lead], filename: str) -> None:
     pd.DataFrame(rows, columns=_CSV_COLUMNS).to_csv(path, index=False)
 
 
-def export_json(leads: List[Lead], filename: str) -> None:
+def export_json(leads: list[Lead], filename: str) -> None:
     """Write ``leads`` to a JSON file (a list of full lead objects)."""
     path = Path(filename)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -54,7 +53,7 @@ def export_json(leads: List[Lead], filename: str) -> None:
         json.dump([asdict(lead) for lead in leads], handle, indent=2)
 
 
-def generate_summary_report(leads: List[Lead], stats: ProcessingStats) -> str:
+def generate_summary_report(leads: list[Lead], stats: ProcessingStats) -> str:
     """Build a plain-text run summary, in the same shape a CLI would print.
 
     Args:
@@ -86,7 +85,7 @@ def generate_summary_report(leads: List[Lead], stats: ProcessingStats) -> str:
 
     scored = sorted(
         (lead for lead in leads if lead.score is not None),
-        key=lambda lead: lead.score,
+        key=lambda lead: lead.score if lead.score is not None else 0,
         reverse=True,
     )
     if not scored:
@@ -100,7 +99,7 @@ def generate_summary_report(leads: List[Lead], stats: ProcessingStats) -> str:
     return "\n".join(lines)
 
 
-def generate_email_digest(leads: List[Lead], top_n: int = 20) -> str:
+def generate_email_digest(leads: list[Lead], top_n: int = 20) -> str:
     """Build an HTML email digest of the highest-scoring leads.
 
     Inline styles only (no ``<style>`` block), matching the convention
@@ -117,7 +116,7 @@ def generate_email_digest(leads: List[Lead], top_n: int = 20) -> str:
     """
     scored = sorted(
         (lead for lead in leads if lead.score is not None),
-        key=lambda lead: lead.score,
+        key=lambda lead: lead.score if lead.score is not None else 0,
         reverse=True,
     )[:top_n]
 
@@ -168,5 +167,5 @@ def _format_duration(seconds: float) -> str:
     """Format a duration in seconds as e.g. ``"2m 15s"`` or ``"3.4s"``."""
     if seconds < 60:
         return f"{seconds:.1f}s"
-    minutes, remainder = divmod(int(round(seconds)), 60)
+    minutes, remainder = divmod(round(seconds), 60)
     return f"{minutes}m {remainder}s"

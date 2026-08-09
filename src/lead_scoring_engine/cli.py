@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 import click
 from dotenv import load_dotenv
 
 from . import config
-from .exporter import export_csv, export_json, generate_email_digest, generate_summary_report
+from .exporter import (
+    export_csv,
+    export_json,
+    generate_email_digest,
+    generate_summary_report,
+)
 from .lead_processor import process_leads
 from .logger import configure_logging
 from .models import LeadScoringError
@@ -47,13 +51,13 @@ def main(
     input_file: str,
     output: str,
     formats: str,
-    api_key: Optional[str],
-    model: Optional[str],
+    api_key: str | None,
+    model: str | None,
     use_cache: bool,
     cache_dir: str,
     dedup_threshold: float,
     rate_limit_delay: float,
-    max_retries: Optional[int],
+    max_retries: int | None,
     verbose: bool,
 ) -> None:
     """Extract, validate, deduplicate, and score leads from RAW_LEAD text.
@@ -131,7 +135,7 @@ def main(
         click.echo(f"(includes {stats.cache_hits} cache hit(s) that made no API call)")
 
 
-_progress_state = {"stage": None}
+_progress_state: dict[str, str | None] = {"stage": None}
 
 
 def _cli_progress(stage: str, current: int, total: int) -> None:

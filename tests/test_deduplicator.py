@@ -12,7 +12,7 @@ from lead_scoring_engine.models import Lead, LeadScoringError
 
 
 def _lead(id, **overrides):
-    fields = dict(raw_text="...", extraction_succeeded=True)
+    fields = {"raw_text": "...", "extraction_succeeded": True}
     fields.update(overrides)
     return Lead(id=id, **fields)
 
@@ -52,7 +52,7 @@ class TestDeduplicateLeads:
                 intent_signals="trade show follow-up",
             ),
         ]
-        deduped, report = deduplicate_leads(leads)
+        deduped, _report = deduplicate_leads(leads)
         assert len(deduped) == 1
         assert deduped[0].company == "Palmetto"
         assert deduped[0].intent_signals == "trade show follow-up"

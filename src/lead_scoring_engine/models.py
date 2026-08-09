@@ -11,15 +11,14 @@ run. ``LeadScoringError`` is the package's single exception type.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 __all__ = [
-    "Lead",
     "ApiUsage",
     "ExtractionResult",
-    "ScoreResult",
-    "ProcessingStats",
+    "Lead",
     "LeadScoringError",
+    "ProcessingStats",
+    "ScoreResult",
 ]
 
 
@@ -79,22 +78,22 @@ class Lead:
 
     id: str
     raw_text: str
-    source: Optional[str] = None
-    name: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    company: Optional[str] = None
-    industry: Optional[str] = None
-    intent_signals: Optional[str] = None
+    source: str | None = None
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    company: str | None = None
+    industry: str | None = None
+    intent_signals: str | None = None
     extraction_succeeded: bool = False
-    extraction_error: Optional[str] = None
-    email_valid: Optional[bool] = None
-    phone_valid: Optional[bool] = None
-    score: Optional[int] = None
-    score_reasoning: Optional[str] = None
-    high_value: Optional[bool] = None
-    follow_up_tactic: Optional[str] = None
-    merged_from: list = field(default_factory=list)
+    extraction_error: str | None = None
+    email_valid: bool | None = None
+    phone_valid: bool | None = None
+    score: int | None = None
+    score_reasoning: str | None = None
+    high_value: bool | None = None
+    follow_up_tactic: str | None = None
+    merged_from: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -118,14 +117,14 @@ class ExtractionResult:
     """
 
     success: bool
-    name: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    company: Optional[str] = None
-    industry: Optional[str] = None
-    intent_signals: Optional[str] = None
-    error: Optional[str] = None
-    usage: Optional[ApiUsage] = None
+    name: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    company: str | None = None
+    industry: str | None = None
+    intent_signals: str | None = None
+    error: str | None = None
+    usage: ApiUsage | None = None
     from_cache: bool = False
 
 
@@ -149,12 +148,12 @@ class ScoreResult:
     """
 
     success: bool
-    score: Optional[int] = None
-    reasoning: Optional[str] = None
-    high_value: Optional[bool] = None
-    follow_up_tactic: Optional[str] = None
-    error: Optional[str] = None
-    usage: Optional[ApiUsage] = None
+    score: int | None = None
+    reasoning: str | None = None
+    high_value: bool | None = None
+    follow_up_tactic: str | None = None
+    error: str | None = None
+    usage: ApiUsage | None = None
     from_cache: bool = False
 
 

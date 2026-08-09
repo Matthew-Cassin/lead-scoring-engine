@@ -16,7 +16,6 @@ so the rest of the pipeline doesn't need to depend on
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Optional, Tuple
 
 from email_phone_validator import EmailValidator, PhoneValidator
 
@@ -39,7 +38,7 @@ def _phone_validator() -> PhoneValidator:
     return PhoneValidator(default_country="US")
 
 
-def validate_email(email: Optional[str]) -> Tuple[bool, Optional[str]]:
+def validate_email(email: str | None) -> tuple[bool, str | None]:
     """Validate and normalize an extracted email address.
 
     Args:
@@ -68,8 +67,8 @@ def validate_email(email: Optional[str]) -> Tuple[bool, Optional[str]]:
 
 
 def validate_phone(
-    phone: Optional[str], country: Optional[str] = None
-) -> Tuple[bool, Optional[str]]:
+    phone: str | None, country: str | None = None
+) -> tuple[bool, str | None]:
     """Validate and normalize an extracted phone number.
 
     Args:

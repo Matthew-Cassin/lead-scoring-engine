@@ -38,29 +38,41 @@ Example:
 from .claude_extractor import ClaudeExtractor
 from .claude_scorer import ClaudeScorer
 from .deduplicator import deduplicate_leads
-from .exporter import export_csv, export_json, generate_email_digest, generate_summary_report
+from .exporter import (
+    export_csv,
+    export_json,
+    generate_email_digest,
+    generate_summary_report,
+)
 from .lead_processor import process_leads
-from .models import ApiUsage, ExtractionResult, Lead, LeadScoringError, ProcessingStats, ScoreResult
+from .models import (
+    ApiUsage,
+    ExtractionResult,
+    Lead,
+    LeadScoringError,
+    ProcessingStats,
+    ScoreResult,
+)
 from .validators import validate_email, validate_phone
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = [
-    "process_leads",
+    "ApiUsage",
     "ClaudeExtractor",
     "ClaudeScorer",
-    "validate_email",
-    "validate_phone",
+    "ExtractionResult",
+    "Lead",
+    "LeadScoringError",
+    "ProcessingStats",
+    "ScoreResult",
+    "__version__",
     "deduplicate_leads",
     "export_csv",
     "export_json",
-    "generate_summary_report",
     "generate_email_digest",
-    "Lead",
-    "ApiUsage",
-    "ExtractionResult",
-    "ScoreResult",
-    "ProcessingStats",
-    "LeadScoringError",
-    "__version__",
+    "generate_summary_report",
+    "process_leads",
+    "validate_email",
+    "validate_phone",
 ]
