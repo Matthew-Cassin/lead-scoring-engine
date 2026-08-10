@@ -9,7 +9,7 @@ description = "AI-powered lead extraction, deduplication, and scoring using the 
 readme = "README.md"
 license = "MIT"
 authors = [{ name = "Matt" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"  # pandas>=3.0.5 requires Python>=3.11
 dependencies = [
     "anthropic>=0.121.0,<1.0.0",
     "pandas>=3.0.5,<4.0.0",
@@ -23,7 +23,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
