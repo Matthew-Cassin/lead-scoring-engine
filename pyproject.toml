@@ -15,8 +15,8 @@ dependencies = [
     "pandas>=3.0.5,<4.0.0",
     "click>=8.4.2,<9.0.0",
     "python-dotenv>=1.2.2,<2.0.0",
-    "email-phone-validator @ git+https://github.com/Matthew-Cassin/email-phone-validator.git@v0.1.0",
-    "contact-deduplicator @ git+https://github.com/Matthew-Cassin/contact-deduplicator.git@v0.1.0",
+    "email-phone-validator @ git+https://github.com/Matthew-Cassin/email-phone-validator.git@v1.0.0",
+    "contact-deduplicator @ git+https://github.com/Matthew-Cassin/contact-deduplicator.git@v1.0.1",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -74,9 +74,3 @@ select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
 # runs it, matching each CI matrix leg.
 [tool.mypy]
 strict = true
-
-# Both still pinned to their pre-1.0 tags (no py.typed yet) -- bump these
-# overrides away once the pins above are updated to >=v1.0.0.
-[[tool.mypy.overrides]]
-module = ["email_phone_validator.*", "contact_deduplicator.*"]
-ignore_missing_imports = true
