@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import anthropic
 
 from . import config
-from ._claude_common import ResponseCache, clean_field, parse_json_response, usage_from_response
+from ._claude_common import (
+    ResponseCache,
+    clean_field,
+    extract_text,
+    parse_json_response,
+    usage_from_response,
+)
 from .logger import get_logger
 from .models import ExtractionResult, LeadScoringError
 
@@ -78,10 +83,10 @@ class ClaudeExtractor:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        model: Optional[str] = None,
-        cache_dir: Optional[str] = config.CACHE_DIR,
-        max_retries: Optional[int] = None,
+        api_key: str | None = None,
+        model: str | None = None,
+        cache_dir: str | None = config.CACHE_DIR,
+        max_retries: int | None = None,
     ) -> None:
         try:
             self._client = anthropic.Anthropic(
@@ -134,22 +139,41 @@ class ClaudeExtractor:
             return ExtractionResult(success=False, error=str(exc))
 
         usage = usage_from_response(response, self.model, config.PRICING_PER_MTOK_USD)
-        text = "".join(
-            block.text for block in response.content if getattr(block, "type", None) == "text"
-        )
+        text = extract_text(response)
         parsed = parse_json_response(text)
         if parsed is None:
             logger.warning("Extraction response was not valid JSON: %.200r", text)
             return ExtractionResult(success=False, error="Response was not valid JSON", usage=usage)
 
-        fields = {
-            "name": clean_field(parsed.get("name")),
-            "email": clean_field(parsed.get("email")),
-            "phone": clean_field(parsed.get("phone")),
-            "company": clean_field(parsed.get("company")),
-            "industry": clean_field(parsed.get("industry")),
-            "intent_signals": clean_field(parsed.get("intent_signals")),
-        }
-        self._cache.set(cache_key, {"success": True, **fields})
+        name = clean_field(parsed.get("name"))
+        email = clean_field(parsed.get("email"))
+        phone = clean_field(parsed.get("phone"))
+        company = clean_field(parsed.get("company"))
+        industry = clean_field(parsed.get("industry"))
+        intent_signals = clean_field(parsed.get("intent_signals"))
+
+        # Passed as individual keywords rather than **-splatting a shared
+        # dict -- see the matching comment in claude_scorer.py.
+        self._cache.set(
+            cache_key,
+            {
+                "success": True,
+                "name": name,
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "industry": industry,
+                "intent_signals": intent_signals,
+            },
+        )
         logger.info("Extraction succeeded")
-        return ExtractionResult(success=True, usage=usage, **fields)
+        return ExtractionResult(
+            success=True,
+            name=name,
+            email=email,
+            phone=phone,
+            company=company,
+            industry=industry,
+            intent_signals=intent_signals,
+            usage=usage,
+        )

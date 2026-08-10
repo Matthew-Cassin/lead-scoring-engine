@@ -15,9 +15,8 @@ Library modules should call :func:`get_logger` rather than using
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-__all__ = ["get_logger", "configure_logging"]
+__all__ = ["configure_logging", "get_logger"]
 
 _PACKAGE_LOGGER_NAME = "lead_scoring_engine"
 
@@ -25,7 +24,7 @@ _package_logger = logging.getLogger(_PACKAGE_LOGGER_NAME)
 _package_logger.addHandler(logging.NullHandler())
 
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
+def get_logger(name: str | None = None) -> logging.Logger:
     """Return the package logger, or a named child of it.
 
     Args:

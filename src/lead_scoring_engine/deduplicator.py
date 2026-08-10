@@ -15,7 +15,6 @@ validation state) that ``Contact`` knows nothing about.
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Dict, List, Optional, Tuple
 
 from contact_deduplicator import Contact, ContactDeduplicator, DeduplicationError
 
@@ -36,13 +35,13 @@ _TRACKED_CONTACT_FIELDS = 5
 
 
 def _completeness(
-    name: Optional[str], email: Optional[str], phone: Optional[str], company: Optional[str]
+    name: str | None, email: str | None, phone: str | None, company: str | None
 ) -> float:
     """Fraction of the 5 Contact-tracked fields that are non-null (address is always None here)."""
     return sum(1 for value in (name, email, phone, company) if value) / _TRACKED_CONTACT_FIELDS
 
 
-def _longest(values: List[Optional[str]]) -> Optional[str]:
+def _longest(values: list[str | None]) -> str | None:
     """The longest non-null value in ``values``, or None if all are null -- the same
     "most complete wins" heuristic contact-deduplicator itself uses for merging."""
     candidates = [v for v in values if v]
@@ -50,8 +49,8 @@ def _longest(values: List[Optional[str]]) -> Optional[str]:
 
 
 def deduplicate_leads(
-    leads: List[Lead], threshold: float = config.DEDUP_THRESHOLD
-) -> Tuple[List[Lead], Dict[str, int]]:
+    leads: list[Lead], threshold: float = config.DEDUP_THRESHOLD
+) -> tuple[list[Lead], dict[str, int]]:
     """Detect and merge duplicate leads.
 
     Args:
@@ -110,7 +109,7 @@ def deduplicate_leads(
         for lead_id in [action.primary_id, *action.merged_ids]
     }
 
-    deduplicated: List[Lead] = []
+    deduplicated: list[Lead] = []
     for action in result.merge_actions:
         group = [lead_by_id[action.primary_id]] + [lead_by_id[i] for i in action.merged_ids]
         primary = lead_by_id[action.primary_id]

@@ -13,23 +13,23 @@ from lead_scoring_engine.models import Lead, ProcessingStats
 
 
 def _lead(id, **overrides):
-    fields = dict(raw_text="...")
+    fields = {"raw_text": "..."}
     fields.update(overrides)
     return Lead(id=id, **fields)
 
 
 def _stats(**overrides):
-    fields = dict(
-        total_input=2,
-        successful_extractions=2,
-        valid_emails=2,
-        duplicates_removed=0,
-        avg_score=75.0,
-        high_value_count=1,
-        processing_time_sec=3.2,
-        total_api_cost_usd=0.01,
-        cache_hits=0,
-    )
+    fields = {
+        "total_input": 2,
+        "successful_extractions": 2,
+        "valid_emails": 2,
+        "duplicates_removed": 0,
+        "avg_score": 75.0,
+        "high_value_count": 1,
+        "processing_time_sec": 3.2,
+        "total_api_cost_usd": 0.01,
+        "cache_hits": 0,
+    }
     fields.update(overrides)
     return ProcessingStats(**fields)
 

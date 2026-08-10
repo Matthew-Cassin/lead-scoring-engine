@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 import anthropic
 
 from . import config
-from ._claude_common import ResponseCache, clean_field, parse_json_response, usage_from_response
+from ._claude_common import (
+    ResponseCache,
+    clean_field,
+    extract_text,
+    parse_json_response,
+    usage_from_response,
+)
 from .logger import get_logger
 from .models import Lead, LeadScoringError, ScoreResult
 
@@ -65,10 +70,10 @@ class ClaudeScorer:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        model: Optional[str] = None,
-        cache_dir: Optional[str] = config.CACHE_DIR,
-        max_retries: Optional[int] = None,
+        api_key: str | None = None,
+        model: str | None = None,
+        cache_dir: str | None = config.CACHE_DIR,
+        max_retries: int | None = None,
     ) -> None:
         try:
             self._client = anthropic.Anthropic(
@@ -132,9 +137,7 @@ class ClaudeScorer:
             return ScoreResult(success=False, error=str(exc))
 
         usage = usage_from_response(response, self.model, config.PRICING_PER_MTOK_USD)
-        text = "".join(
-            block.text for block in response.content if getattr(block, "type", None) == "text"
-        )
+        text = extract_text(response)
         parsed = parse_json_response(text)
         if parsed is None:
             logger.warning("Scoring response was not valid JSON: %.200r", text)
@@ -147,18 +150,37 @@ class ClaudeScorer:
                 success=False, error="Response did not contain a usable 0-100 score", usage=usage
             )
 
-        fields = {
-            "score": score,
-            "reasoning": clean_field(parsed.get("reasoning")),
-            "high_value": bool(parsed.get("high_value")) if "high_value" in parsed else None,
-            "follow_up_tactic": clean_field(parsed.get("follow_up_tactic")),
-        }
-        self._cache.set(cache_key, {"success": True, **fields})
+        reasoning = clean_field(parsed.get("reasoning"))
+        high_value = bool(parsed.get("high_value")) if "high_value" in parsed else None
+        follow_up_tactic = clean_field(parsed.get("follow_up_tactic"))
+
+        # Built and passed as individual keywords rather than **-splatting
+        # a shared dict: the dict's value type is a union of every
+        # field's type, which is too broad for any one field once
+        # splatted (mypy can't correlate key -> narrower type through
+        # **kwargs), for both this call and the one below.
+        self._cache.set(
+            cache_key,
+            {
+                "success": True,
+                "score": score,
+                "reasoning": reasoning,
+                "high_value": high_value,
+                "follow_up_tactic": follow_up_tactic,
+            },
+        )
         logger.info("Scoring succeeded: %d", score)
-        return ScoreResult(success=True, usage=usage, **fields)
+        return ScoreResult(
+            success=True,
+            score=score,
+            reasoning=reasoning,
+            high_value=high_value,
+            follow_up_tactic=follow_up_tactic,
+            usage=usage,
+        )
 
     @staticmethod
-    def _coerce_score(raw_score: object) -> Optional[int]:
+    def _coerce_score(raw_score: object) -> int | None:
         """Clamp/validate Claude's reported score into a usable 0-100 int.
 
         Handles Claude returning the score as a float or a numeric
@@ -166,8 +188,10 @@ class ClaudeScorer:
         0-100 or not numeric at all rather than silently clamping bad
         output into a misleadingly plausible-looking number.
         """
+        if not isinstance(raw_score, (int, float, str)):
+            return None
         try:
-            value = int(round(float(raw_score)))
-        except (TypeError, ValueError):
+            value = round(float(raw_score))
+        except ValueError:
             return None
         return value if 0 <= value <= 100 else None

@@ -12,7 +12,9 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
+
+from anthropic.types import Message
 
 from .logger import get_logger
 from .models import ApiUsage
@@ -26,7 +28,7 @@ logger = get_logger("_claude_common")
 _NULL_LIKE = {"null", "n/a", "na", "none", "unknown", "not found", "not provided", ""}
 
 
-def clean_field(value: Any) -> Optional[str]:
+def clean_field(value: Any) -> str | None:
     """Normalize one extracted field value to ``None`` or a clean string.
 
     Args:
@@ -47,7 +49,7 @@ def clean_field(value: Any) -> Optional[str]:
     return None if stripped.lower() in _NULL_LIKE else stripped
 
 
-def parse_json_response(text: str) -> Optional[Dict[str, Any]]:
+def parse_json_response(text: str) -> dict[str, Any] | None:
     """Parse a JSON object out of a Claude text response.
 
     Handles two real deviations from "return only valid JSON" seen in
@@ -87,15 +89,35 @@ def parse_json_response(text: str) -> Optional[Dict[str, Any]]:
             depth -= 1
             if depth == 0:
                 try:
-                    parsed = json.loads(stripped[start : i + 1])  # noqa: E203
+                    parsed = json.loads(stripped[start : i + 1])
                     return parsed if isinstance(parsed, dict) else None
                 except json.JSONDecodeError:
                     return None
     return None
 
 
+def extract_text(response: Message) -> str:
+    """Concatenate every text block in a Claude response's content.
+
+    A response can mix text blocks with non-text ones (thinking blocks,
+    tool-use blocks, etc. -- depending on what was requested); only the
+    text blocks matter to callers that are looking for a JSON-in-prose
+    reply, which is all of them here.
+
+    Checks ``block.type`` rather than ``isinstance(block, TextBlock)``
+    deliberately: it's the same check the SDK's own content union relies
+    on to discriminate, and it also matches lightweight fakes in tests
+    that don't subclass the real SDK types.
+    """
+    return "".join(
+        block.text  # type: ignore[union-attr]  # narrowed by the type=="text" check, not isinstance
+        for block in response.content
+        if getattr(block, "type", None) == "text"
+    )
+
+
 def usage_from_response(
-    response: Any, model: str, pricing: Dict[str, Dict[str, float]]
+    response: Message, model: str, pricing: dict[str, dict[str, float]]
 ) -> ApiUsage:
     """Build an :class:`~lead_scoring_engine.models.ApiUsage` from a Claude response.
 
@@ -137,19 +159,23 @@ class ResponseCache:
     when constructed with ``cache_dir=None``.
     """
 
-    def __init__(self, cache_dir: Optional[Path], kind: str) -> None:
+    def __init__(self, cache_dir: Path | None, kind: str) -> None:
         self.cache_dir = cache_dir
         self.kind = kind
 
     def key_for(self, model: str, prompt_version: str, input_text: str) -> str:
         """Compute the cache key for one (model, prompt version, input) triple."""
-        digest_input = f"{model}:{prompt_version}:{input_text}".encode("utf-8")
+        digest_input = f"{model}:{prompt_version}:{input_text}".encode()
         return hashlib.sha256(digest_input).hexdigest()
 
     def _path(self, key: str) -> Path:
+        # Both callers (get/set) already return early when cache_dir is
+        # None; this assert documents that precondition for the type
+        # checker rather than re-branching on it a third time.
+        assert self.cache_dir is not None, "_path() called with caching disabled"
         return self.cache_dir / f"{self.kind}_{key}.json"
 
-    def get(self, key: str) -> Optional[Dict[str, Any]]:
+    def get(self, key: str) -> dict[str, Any] | None:
         """Return the cached dict for ``key``, or ``None`` on a cache miss."""
         if self.cache_dir is None:
             return None
@@ -157,12 +183,13 @@ class ResponseCache:
         if not path.exists():
             return None
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            parsed = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             logger.warning("Ignoring unreadable cache entry: %s", path)
             return None
+        return parsed if isinstance(parsed, dict) else None
 
-    def set(self, key: str, data: Dict[str, Any]) -> None:
+    def set(self, key: str, data: dict[str, Any]) -> None:
         """Write ``data`` to the cache under ``key``. A no-op if caching is disabled."""
         if self.cache_dir is None:
             return

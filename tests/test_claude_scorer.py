@@ -24,7 +24,13 @@ def _scorer_with_mock_client(cache_dir=None):
 
 
 def _lead(**overrides):
-    fields = dict(id="lead-1", raw_text="...", name="Jane", company="Acme", industry="SaaS")
+    fields = {
+        "id": "lead-1",
+        "raw_text": "...",
+        "name": "Jane",
+        "company": "Acme",
+        "industry": "SaaS",
+    }
     fields.update(overrides)
     return Lead(**fields)
 

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, List, Optional, Tuple
+from typing import TypedDict
 
 import pandas as pd
 
@@ -27,19 +28,28 @@ __all__ = ["process_leads"]
 ProgressCallback = Callable[[str, int, int], None]
 
 
+class _RawLeadRow(TypedDict):
+    """One row of ``_load_raw_leads``'s output. ``raw_text`` is always a
+    non-empty string (empty rows are filtered out before this is built);
+    ``source`` is optional."""
+
+    raw_text: str
+    source: str | None
+
+
 def process_leads(
     input_file: str,
     *,
-    api_key: Optional[str] = None,
-    model: Optional[str] = None,
-    cache_dir: Optional[str] = config.CACHE_DIR,
+    api_key: str | None = None,
+    model: str | None = None,
+    cache_dir: str | None = config.CACHE_DIR,
     dedup_threshold: float = config.DEDUP_THRESHOLD,
     rate_limit_delay: float = config.RATE_LIMIT_DELAY_SEC,
-    max_retries: Optional[int] = None,
-    extractor: Optional[ClaudeExtractor] = None,
-    scorer: Optional[ClaudeScorer] = None,
-    progress: Optional[ProgressCallback] = None,
-) -> Tuple[List[Lead], ProcessingStats]:
+    max_retries: int | None = None,
+    extractor: ClaudeExtractor | None = None,
+    scorer: ClaudeScorer | None = None,
+    progress: ProgressCallback | None = None,
+) -> tuple[list[Lead], ProcessingStats]:
     """Run the full pipeline: load, extract, validate, deduplicate, score.
 
     Args:
@@ -133,21 +143,21 @@ def process_leads(
     total_scoreable = len(deduplicated)
 
     for index, lead in enumerate(deduplicated, start=1):
-        result = scorer.score_lead(lead)
-        if result.success:
-            lead.score = result.score
-            lead.score_reasoning = result.reasoning
-            lead.high_value = result.high_value
-            lead.follow_up_tactic = result.follow_up_tactic
+        score_result = scorer.score_lead(lead)
+        if score_result.success:
+            lead.score = score_result.score
+            lead.score_reasoning = score_result.reasoning
+            lead.high_value = score_result.high_value
+            lead.follow_up_tactic = score_result.follow_up_tactic
 
-        if result.from_cache:
+        if score_result.from_cache:
             cache_hits += 1
-        elif result.usage is not None:
-            total_cost += result.usage.cost_usd
+        elif score_result.usage is not None:
+            total_cost += score_result.usage.cost_usd
 
         if progress is not None:
             progress("score", index, total_scoreable)
-        if not result.from_cache and index < total_scoreable:
+        if not score_result.from_cache and index < total_scoreable:
             time.sleep(rate_limit_delay)
 
     scores = [lead.score for lead in deduplicated if lead.score is not None]
@@ -172,7 +182,7 @@ def process_leads(
     return deduplicated, stats
 
 
-def _load_raw_leads(input_file: str) -> List[dict]:
+def _load_raw_leads(input_file: str) -> list[_RawLeadRow]:
     """Load raw lead rows from a ``.csv`` or ``.json`` file.
 
     Returns:
@@ -217,14 +227,15 @@ def _load_raw_leads(input_file: str) -> List[dict]:
     if rows and not has_raw_lead_field:
         raise LeadScoringError(f"{input_file} has no 'raw_lead' field in any row")
 
-    raw_leads = []
+    raw_leads: list[_RawLeadRow] = []
     for row_number, row in enumerate(rows, start=1):
         if not isinstance(row, dict):
             logger.warning("Skipping row %d: not an object", row_number)
             continue
-        raw_text = (row.get("raw_lead") or "").strip()
+        raw_text = str(row.get("raw_lead") or "").strip()
         if not raw_text:
             logger.warning("Skipping row %d: empty 'raw_lead' value", row_number)
             continue
-        raw_leads.append({"raw_text": raw_text, "source": row.get("source") or None})
+        source = row.get("source") or None
+        raw_leads.append({"raw_text": raw_text, "source": str(source) if source else None})
     return raw_leads

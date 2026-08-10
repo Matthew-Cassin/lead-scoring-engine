@@ -11,7 +11,12 @@ import json
 import pytest
 
 from lead_scoring_engine.lead_processor import _load_raw_leads, process_leads
-from lead_scoring_engine.models import ApiUsage, ExtractionResult, LeadScoringError, ScoreResult
+from lead_scoring_engine.models import (
+    ApiUsage,
+    ExtractionResult,
+    LeadScoringError,
+    ScoreResult,
+)
 
 
 class FakeExtractor:
@@ -39,15 +44,19 @@ class FakeScorer:
 
 
 def _extraction(**overrides):
-    fields = dict(success=True, name="Jane", email="jane@x.com", company="Acme")
+    fields = {"success": True, "name": "Jane", "email": "jane@x.com", "company": "Acme"}
     fields.update(overrides)
     return ExtractionResult(**fields)
 
 
 def _score(**overrides):
-    fields = dict(
-        success=True, score=70, reasoning="ok", high_value=False, follow_up_tactic="email"
-    )
+    fields = {
+        "success": True,
+        "score": 70,
+        "reasoning": "ok",
+        "high_value": False,
+        "follow_up_tactic": "email",
+    }
     fields.update(overrides)
     return ScoreResult(**fields)
 
