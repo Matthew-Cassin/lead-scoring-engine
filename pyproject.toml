@@ -16,7 +16,7 @@ dependencies = [
     "click>=8.4.2,<9.0.0",
     "python-dotenv>=1.2.2,<2.0.0",
     "email-phone-validator @ git+https://github.com/Matthew-Cassin/email-phone-validator.git@v1.0.0",
-    "contact-deduplicator @ git+https://github.com/Matthew-Cassin/contact-deduplicator.git@v1.0.1",
+    "contact-deduplicator @ git+https://github.com/Matthew-Cassin/contact-deduplicator.git@v1.0.2",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -64,7 +64,7 @@ addopts = "--strict-markers"
 source = ["lead_scoring_engine"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
