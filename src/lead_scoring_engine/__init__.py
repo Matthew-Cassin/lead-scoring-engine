@@ -55,7 +55,7 @@ from .models import (
 )
 from .validators import validate_email, validate_phone
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 __all__ = [
     "ApiUsage",

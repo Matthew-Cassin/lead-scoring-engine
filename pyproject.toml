@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lead-scoring-engine"
-version = "1.0.0"
+version = "1.0.1"
 description = "AI-powered lead extraction, deduplication, and scoring using the Claude API, built on top of email-phone-validator and contact-deduplicator."
 readme = "README.md"
 license = "MIT"
